@@ -12,7 +12,6 @@ import ru.praktikum.sprint4.steps.Steps;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 
 import static org.junit.Assert.assertTrue;
 
@@ -34,16 +33,7 @@ public class OrderTest {
     private final String commentForDelivery;
 
 
-    public OrderTest(String orderButton,
-                     String customerName,
-                     String customerFamilyName,
-                     String customerAddress,
-                     String customerUndergroundStation,
-                     String customerPhoneNumber,
-                     String deliveryDateShift,
-                     String rentPeriod,
-                     String colour,
-                     String commentForDelivery) {
+    public OrderTest(String orderButton, String customerName, String customerFamilyName, String customerAddress, String customerUndergroundStation, String customerPhoneNumber, String deliveryDateShift, String rentPeriod, String colour, String commentForDelivery) {
         this.orderButton = orderButton;
         this.customerName = customerName;
         this.customerFamilyName = customerFamilyName;
@@ -58,59 +48,26 @@ public class OrderTest {
 
     @Parameterized.Parameters
     public static Object[][] getTestData() {
-        return new Object[][]{
-                {"topOrderButton", "Имя", "Фамилия", "Улица Дом", "Бульвар Рокоссовского", "77777777777", "1", "сутки",
-                        "black", "комментарий"},
-                {"bottomOrderButton", "Имярек", "ФАМИЛИЯ", "Улица Дом Квартира", "Театральная", "00000000000", "30",
-                        "семеро суток", "grey", "comment"},
-        };
+        return new Object[][]{{"topOrderButton", "Имя", "Фамилия", "Улица Дом", "Бульвар Рокоссовского", "77777777777", "1", "сутки", "black", "комментарий"},
+                {"bottomOrderButton", "Имярек", "ФАМИЛИЯ", "Улица Дом Квартира", "Театральная", "00000000000", "30", "семеро суток", "grey", "comment"},};
     }
 
 
     @Test
     public void orderShouldBeCreatedSuccessfullyWhenOrderAttributesFilledCorrectly() {
 
-        HashMap<String, Boolean> testResults = new HashMap<>();
+        WebDriver driver = browserRule.getDriver();
+        MainPageSteps mainPage = new MainPageSteps();
+        OrderPageSteps orderPage = new OrderPageSteps();
+        Steps steps = new Steps(driver);
 
-        for (WebDriver driver : browserRule.getDrivers()) {
-            System.out.println("Test is executed for " + driver.toString());
-            MainPageSteps mainPage = new MainPageSteps();
-            OrderPageSteps orderPage = new OrderPageSteps();
-            Steps steps = new Steps(driver);
-
-            try {
-                steps.open(mainPage.getUrl()).clickCoveredElement(mainPage.getOrderButton(orderButton));
-                steps.enterText(orderPage.getCustomerFirstName(), customerName)
-                        .enterText(orderPage.getCustomerFamilyName(), customerFamilyName)
-                        .enterText(orderPage.getCustomerAddress(), customerAddress)
-                        .selectMenuItem(orderPage.getCustomerUndergroundStationInputField(),
-                                orderPage.getUndergroundStationMenuItem(customerUndergroundStation)
-                                , customerUndergroundStation)
-                        .enterText(orderPage.getCustomerPhoneNumber(), customerPhoneNumber)
-                        .clickCoveredElement(orderPage.getNextButton())
-                        .enterText(orderPage.getOrderDeliveryDate(), calculateDeliveryDate(deliveryDateShift))
-                        .hitKey(orderPage.getOrderDeliveryDate(), Keys.RETURN)
-                        .click(orderPage.getRentPeriodMenu())
-                        .click(orderPage.getRentPeriodItem(rentPeriod))
-                        .click(orderPage.getColourCheckbox(colour))
-                        .enterText(orderPage.getCommentForDelivery(), commentForDelivery)
-                        .clickCoveredElement(orderPage.getOrderButton())
-                        .waitUntilVisible(orderPage.getOrderConfirmationModalWindow())
-                        .click(orderPage.getConfirmationButton());
-                //При успешном оформлении заказа ожидается появление информационного окна
-                testResults.put(driver.toString(), steps.checkExists(orderPage.getOrderSuccessInformationWindow()));
-
-            } catch (IllegalArgumentException e) {
-                Assert.fail("Incorrect Arguments were used. " + e.getMessage());
-            }
-        }
-        //Проверяем успешность прохождения теста в FireFox и Chrome
-        System.out.println("Checking test results...");
-        for (String browser : testResults.keySet()) {
-            System.out.println("Was order created successfully in " + browser + " ? " + testResults.get(browser));
-        }
-        for (String browser : testResults.keySet()) {
-            assertTrue("Order was not created successfully in " + browser, testResults.get(browser));
+        try {
+            steps.open(mainPage.getUrl()).clickCoveredElement(mainPage.getOrderButton(orderButton));
+            steps.enterText(orderPage.getCustomerFirstName(), customerName).enterText(orderPage.getCustomerFamilyName(), customerFamilyName).enterText(orderPage.getCustomerAddress(), customerAddress).selectMenuItem(orderPage.getCustomerUndergroundStationInputField(), orderPage.getUndergroundStationMenuItem(customerUndergroundStation), customerUndergroundStation).enterText(orderPage.getCustomerPhoneNumber(), customerPhoneNumber).clickCoveredElement(orderPage.getNextButton()).enterText(orderPage.getOrderDeliveryDate(), calculateDeliveryDate(deliveryDateShift)).hitKey(orderPage.getOrderDeliveryDate(), Keys.RETURN).click(orderPage.getRentPeriodMenu()).click(orderPage.getRentPeriodItem(rentPeriod)).click(orderPage.getColourCheckbox(colour)).enterText(orderPage.getCommentForDelivery(), commentForDelivery).clickCoveredElement(orderPage.getOrderButton()).waitUntilVisible(orderPage.getOrderConfirmationModalWindow()).click(orderPage.getConfirmationButton());
+            //При успешном оформлении заказа ожидается появление информационного окна
+            assertTrue("Order was not created successfully", steps.checkExists(orderPage.getOrderSuccessInformationWindow()));
+        } catch (IllegalArgumentException e) {
+            Assert.fail("Incorrect Arguments were used. " + e.getMessage());
         }
     }
 
